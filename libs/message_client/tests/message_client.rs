@@ -3,8 +3,8 @@ mod test {
 
     use std::collections::HashMap;
 
-    use mu_rust_message_common::exchange::Exchange;
     use mu_rust_message_client::MessageClient;
+    use mu_rust_message_common::exchange::Exchange;
     use tracing::Level;
     use tracing_subscriber::FmtSubscriber;
 
