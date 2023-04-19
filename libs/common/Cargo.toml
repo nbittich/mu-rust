@@ -1,0 +1,15 @@
+[package]
+name = "mu_rust_common"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+
+[dependencies]
+tracing-subscriber = { workspace = true, features = [
+  "env-filter",
+  "time",
+  "local-time",
+] }
+tracing = { workspace = true }
+time = { workspace = true, features = ["formatting", "local-offset", "macros"] }
+chrono = { workspace = true }
