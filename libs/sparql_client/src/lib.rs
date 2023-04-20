@@ -32,7 +32,7 @@ pub use reqwest::header::HeaderName;
 pub use reqwest::header::HeaderValue;
 
 pub const REQUEST_TIMEOUT_SECONDS: &str = "REQUEST_TIMEOUT_SECONDS";
-pub type MuResponseHeaders = HashMap<HeaderName, HeaderValue>;
+pub type MuResponseHeaders = Vec<(HeaderName, HeaderValue)>;
 
 pub struct SparqlClient {
     reg: Regex,
