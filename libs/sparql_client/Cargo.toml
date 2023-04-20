@@ -8,10 +8,15 @@ license = { workspace = true }
 tracing = { workspace = true }
 spargebra = { workspace = true }
 sparesults = { workspace = true }
-reqwest = { workspace = true }
 new_string_template = { workspace = true }
 regex = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
+
+
+[dependencies.reqwest]
+default-features = false
+workspace = true
+features = ["json", "rustls-tls"]
 
 [dev-dependencies]
 serde_json = { workspace = true }
