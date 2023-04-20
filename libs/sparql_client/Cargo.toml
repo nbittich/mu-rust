@@ -17,6 +17,5 @@ serde = { workspace = true, features = ["derive"] }
 default-features = false
 workspace = true
 features = ["json", "rustls-tls"]
-
-[dev-dependencies]
+serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }

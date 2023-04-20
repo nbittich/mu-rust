@@ -861,7 +861,6 @@ dependencies = [
  "regex",
  "reqwest",
  "serde",
- "serde_json",
  "sparesults",
  "spargebra",
  "tracing",

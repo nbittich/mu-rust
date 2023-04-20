@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::env;
 use std::error::Error;
@@ -6,9 +7,13 @@ use std::time::Duration;
 use new_string_template::template::Template;
 
 use regex::Regex;
+use reqwest::header::CONTENT_TYPE;
 use reqwest::Client;
+use serde::Deserialize;
+use serde::Serialize;
 pub use spargebra::Query;
 pub use spargebra::Update as UpdateQuery;
+
 pub const HEADER_MU_AUTH_SUDO: &str = "mu-auth-sudo";
 pub const HEADER_MU_CALL_ID: &str = "mu-auth-sudo";
 pub const HEADER_MU_SESSION_ID: &str = "mu-call-id";
@@ -28,6 +33,41 @@ pub struct SparqlClient {
 pub struct Config {
     pub endpoint: Option<String>,
     pub timeout: Option<Duration>,
+}
+
+#[derive(Debug, Default, Clone)]
+pub struct SessionQueryHeaders {
+    call_id: Option<String>,
+    session_id: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SparqlResponse {
+    pub head: Head,
+    pub results: Option<SparqlResult>,
+    pub boolean: Option<bool>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Head {
+    pub link: Option<Vec<String>>,
+    pub vars: Option<Vec<String>>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SparqlResult {
+    pub distinct: Option<bool>,
+    pub bindings: Vec<BTreeMap<String, Binding>>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Binding {
+    pub datatype: Option<String>,
+    #[serde(rename = "type")]
+    pub rdf_type: String,
+    pub value: String,
+    #[serde(rename = "xml:lang")]
+    pub lang: Option<String>,
 }
 
 impl SparqlClient {
@@ -77,6 +117,85 @@ impl SparqlClient {
         println!("{query}");
         let query = Query::parse(&query, None)?;
         Ok(query)
+    }
+
+    pub async fn update(
+        &self,
+        query: UpdateQuery,
+        headers: SessionQueryHeaders,
+    ) -> Result<(), Box<dyn Error>> {
+        let response = self
+            .client
+            .post(&self.endpoint)
+            .header(CONTENT_TYPE, SPARQL_RESULT_CONTENT_TYPE)
+            .header(HEADER_MU_CALL_ID, headers.call_id.unwrap_or("".into()))
+            .header(
+                HEADER_MU_SESSION_ID,
+                headers.session_id.unwrap_or("".into()),
+            )
+            .query(&[
+                ("query", query.to_string()),
+                ("format", SPARQL_RESULT_CONTENT_TYPE.to_string()),
+            ])
+            .send()
+            .await?;
+        let _ = response.error_for_status()?;
+        Ok(())
+    }
+    pub async fn query(
+        &self,
+        query: Query,
+        headers: SessionQueryHeaders,
+    ) -> Result<SparqlResponse, Box<dyn Error>> {
+        let response = self
+            .client
+            .post(&self.endpoint)
+            .header(CONTENT_TYPE, SPARQL_RESULT_CONTENT_TYPE)
+            .header(HEADER_MU_CALL_ID, headers.call_id.unwrap_or("".into()))
+            .header(
+                HEADER_MU_SESSION_ID,
+                headers.session_id.unwrap_or("".into()),
+            )
+            .query(&[
+                ("query", query.to_string()),
+                ("format", SPARQL_RESULT_CONTENT_TYPE.to_string()),
+            ])
+            .send()
+            .await?;
+        let sparql_result: SparqlResponse = response.json().await?;
+        Ok(sparql_result)
+    }
+
+    pub async fn update_sudo(&self, query: UpdateQuery) -> Result<(), Box<dyn Error>> {
+        let response = self
+            .client
+            .post(&self.endpoint)
+            .header(CONTENT_TYPE, SPARQL_RESULT_CONTENT_TYPE)
+            .header(HEADER_MU_AUTH_SUDO, "true")
+            .query(&[
+                ("query", query.to_string()),
+                ("format", SPARQL_RESULT_CONTENT_TYPE.to_string()),
+            ])
+            .send()
+            .await?;
+        let _ = response.error_for_status()?;
+        Ok(())
+    }
+
+    pub async fn query_sudo(&self, query: Query) -> Result<SparqlResponse, Box<dyn Error>> {
+        let response = self
+            .client
+            .post(&self.endpoint)
+            .header(CONTENT_TYPE, SPARQL_RESULT_CONTENT_TYPE)
+            .header(HEADER_MU_AUTH_SUDO, "true")
+            .query(&[
+                ("query", query.to_string()),
+                ("format", SPARQL_RESULT_CONTENT_TYPE.to_string()),
+            ])
+            .send()
+            .await?;
+        let sparql_result: SparqlResponse = response.json().await?;
+        Ok(sparql_result)
     }
 }
 
