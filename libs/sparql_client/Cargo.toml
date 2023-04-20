@@ -17,5 +17,3 @@ mu_rust_common = { workspace = true }
 default-features = false
 workspace = true
 features = ["json", "rustls-tls"]
-serde = { workspace = true, features = ["derive"] }
-serde_json = { workspace = true }
