@@ -2,7 +2,6 @@
 [workspace]
 
 members = [
-  # "services/service_common",
   "services/message_broker",
   "libs/message_client",
   "libs/common",
@@ -61,6 +60,9 @@ minijinja = "0.31.1"
 tinytemplate = "1.2.1"
 new_string_template = "1.4"
 
+
+mu_rust_common = { path = "./libs/common", version = "0.1.0" }
+mu_rust_message_common = { path = "./libs/message_common", version = "0.1.0" }
 
 [workspace.package]
 version = "0.1.0"

@@ -20,5 +20,5 @@ serde_json = { workspace = true }
 dirs = { workspace = true }
 futures-util = { workspace = true }
 queue-file = { workspace = true }
-mu_rust_common = { path = "../../libs/common" }
-mu_rust_message_common = { path = "../../libs/message_common" }
+mu_rust_message_common = { workspace = true }
+mu_rust_common = { workspace = true }

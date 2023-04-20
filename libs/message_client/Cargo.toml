@@ -12,9 +12,8 @@ bincode = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 futures-util = { workspace = true }
-mu_rust_message_common = { path = "../message_common" }
 tracing = { workspace = true }
 futures = { workspace = true }
-
+mu_rust_message_common = { workspace = true }
 [dev-dependencies]
 tracing-subscriber = { workspace = true }

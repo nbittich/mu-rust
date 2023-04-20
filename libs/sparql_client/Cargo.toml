@@ -11,7 +11,7 @@ sparesults = { workspace = true }
 new_string_template = { workspace = true }
 regex = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
-mu_rust_common = { path = "../common" }
+mu_rust_common = { workspace = true }
 
 [dependencies.reqwest]
 default-features = false
