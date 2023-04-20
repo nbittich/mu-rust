@@ -1,0 +1,17 @@
+[package]
+name = "mu_rust_sparql_client"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+
+[dependencies]
+tracing = { workspace = true }
+spargebra = { workspace = true }
+sparesults = { workspace = true }
+reqwest = { workspace = true }
+new_string_template = { workspace = true }
+regex = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+
+[dev-dependencies]
+serde_json = { workspace = true }

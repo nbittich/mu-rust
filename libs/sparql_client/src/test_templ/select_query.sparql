@@ -1,0 +1,3 @@
+select * where { 
+  <${bestuurUri}> ?p ?o 
+}

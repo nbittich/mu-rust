@@ -2,12 +2,13 @@
 [workspace]
 
 members = [
-    # "services/service_common",
-    "services/message_broker",
-    "libs/message_client",
-    "libs/common",
-    "libs/message_common",
-    "libs/service_common",
+  # "services/service_common",
+  "services/message_broker",
+  "libs/message_client",
+  "libs/common",
+  "libs/message_common",
+  "libs/service_common",
+  "libs/sparql_client",
 ]
 
 
@@ -51,6 +52,14 @@ image = "0.24.6"
 tokio-stream = "0.1.12"
 cron = "0.12.0"
 time = "0.3.20"
+sparesults = "0.1.7"
+spargebra = "0.2.7"
+rio_turtle = "0.8.4"
+oxrdf = "0.1.5"
+handlebars = "4.3.6"
+minijinja = "0.31.1"
+tinytemplate = "1.2.1"
+new_string_template = "1.4"
 
 [workspace.package]
 version = "0.1.0"

@@ -1,0 +1,5 @@
+delete where {
+  graph<${someGraph}> {
+    <${someUri}> <http://some-predicate/pred> "${someValue}".
+  }
+}

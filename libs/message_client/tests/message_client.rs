@@ -9,6 +9,7 @@ mod test {
     use tracing_subscriber::FmtSubscriber;
 
     #[tokio::test]
+    #[ignore = "integration test"]
     async fn test_client() {
         let subscriber = FmtSubscriber::builder()
             .with_max_level(Level::TRACE)
