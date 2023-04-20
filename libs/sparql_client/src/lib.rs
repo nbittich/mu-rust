@@ -2,9 +2,13 @@ use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::env;
 use std::error::Error;
+use std::fmt::Display;
 use std::time::Duration;
 
 use mu_rust_common::SessionQueryHeaders;
+use mu_rust_common::HEADER_MU_AUTH_ALLOWED_GROUPS;
+use mu_rust_common::HEADER_MU_AUTH_USED_GROUPS;
+
 use mu_rust_common::HEADER_MU_AUTH_SUDO;
 use mu_rust_common::HEADER_MU_CALL_ID;
 use mu_rust_common::HEADER_MU_SESSION_ID;
@@ -15,14 +19,20 @@ use new_string_template::template::Template;
 use regex::Regex;
 use reqwest::header::CONTENT_TYPE;
 use reqwest::Client;
+use reqwest::Response;
 use serde::Deserialize;
 use serde::Serialize;
+
+const CUSTOM_REGEX: &str = r"(?mi)\$\{([^\}]+)\}";
+
 pub use spargebra::Query;
 pub use spargebra::Update as UpdateQuery;
 
-pub const REQUEST_TIMEOUT_SECONDS: &str = "REQUEST_TIMEOUT_SECONDS";
+pub use reqwest::header::HeaderName;
+pub use reqwest::header::HeaderValue;
 
-const CUSTOM_REGEX: &str = r"(?mi)\$\{([^\}]+)\}";
+pub const REQUEST_TIMEOUT_SECONDS: &str = "REQUEST_TIMEOUT_SECONDS";
+pub type Headers = HashMap<HeaderName, HeaderValue>;
 
 pub struct SparqlClient {
     reg: Regex,
@@ -114,83 +124,83 @@ impl SparqlClient {
         Ok(query)
     }
 
+    async fn _request(
+        &self,
+        headers: Option<SessionQueryHeaders>,
+        query: impl Display,
+    ) -> Result<Response, Box<dyn Error>> {
+        let query = query.to_string();
+        tracing::debug!("query: {query}");
+
+        let mut request_builder = self
+            .client
+            .post(&self.endpoint)
+            .query(&[
+                ("query", query),
+                ("format", SPARQL_RESULT_CONTENT_TYPE.to_string()),
+            ])
+            .header(CONTENT_TYPE, SPARQL_RESULT_CONTENT_TYPE);
+        if let Some(headers) = headers {
+            request_builder = request_builder
+                .header(
+                    HEADER_MU_SESSION_ID,
+                    headers.session_id.unwrap_or("".into()),
+                )
+                .header(HEADER_MU_CALL_ID, headers.call_id.unwrap_or("".into()));
+        } else {
+            request_builder = request_builder.header(HEADER_MU_AUTH_SUDO, "true");
+        }
+
+        let response = request_builder.send().await?;
+        let response = response.error_for_status()?;
+        Ok(response)
+    }
+    fn extract_mu_headers(&self, response: &Response) -> Headers {
+        response
+            .headers()
+            .iter()
+            .filter(|(n, _)| {
+                [HEADER_MU_AUTH_USED_GROUPS, HEADER_MU_AUTH_ALLOWED_GROUPS].contains(&n.as_str())
+            })
+            .map(|(n, v)| (n.clone(), v.clone()))
+            .collect()
+    }
+
     pub async fn update(
         &self,
         query: UpdateQuery,
         headers: SessionQueryHeaders,
-    ) -> Result<(), Box<dyn Error>> {
-        let response = self
-            .client
-            .post(&self.endpoint)
-            .header(CONTENT_TYPE, SPARQL_RESULT_CONTENT_TYPE)
-            .header(HEADER_MU_CALL_ID, headers.call_id.unwrap_or("".into()))
-            .header(
-                HEADER_MU_SESSION_ID,
-                headers.session_id.unwrap_or("".into()),
-            )
-            .query(&[
-                ("query", query.to_string()),
-                ("format", SPARQL_RESULT_CONTENT_TYPE.to_string()),
-            ])
-            .send()
-            .await?;
-        let _ = response.error_for_status()?;
-        Ok(())
+    ) -> Result<Headers, Box<dyn Error>> {
+        let response = self._request(Some(headers), query).await?;
+        let response = response.error_for_status()?;
+
+        Ok(self.extract_mu_headers(&response))
     }
     pub async fn query(
         &self,
         query: Query,
         headers: SessionQueryHeaders,
-    ) -> Result<SparqlResponse, Box<dyn Error>> {
-        let response = self
-            .client
-            .post(&self.endpoint)
-            .header(CONTENT_TYPE, SPARQL_RESULT_CONTENT_TYPE)
-            .header(HEADER_MU_CALL_ID, headers.call_id.unwrap_or("".into()))
-            .header(
-                HEADER_MU_SESSION_ID,
-                headers.session_id.unwrap_or("".into()),
-            )
-            .query(&[
-                ("query", query.to_string()),
-                ("format", SPARQL_RESULT_CONTENT_TYPE.to_string()),
-            ])
-            .send()
-            .await?;
+    ) -> Result<(Headers, SparqlResponse), Box<dyn Error>> {
+        let response = self._request(Some(headers), query).await?;
+        let headers = self.extract_mu_headers(&response);
         let sparql_result: SparqlResponse = response.json().await?;
-        Ok(sparql_result)
+        Ok((headers, sparql_result))
     }
 
-    pub async fn update_sudo(&self, query: UpdateQuery) -> Result<(), Box<dyn Error>> {
-        let response = self
-            .client
-            .post(&self.endpoint)
-            .header(CONTENT_TYPE, SPARQL_RESULT_CONTENT_TYPE)
-            .header(HEADER_MU_AUTH_SUDO, "true")
-            .query(&[
-                ("query", query.to_string()),
-                ("format", SPARQL_RESULT_CONTENT_TYPE.to_string()),
-            ])
-            .send()
-            .await?;
-        let _ = response.error_for_status()?;
-        Ok(())
+    pub async fn update_sudo(&self, query: UpdateQuery) -> Result<Headers, Box<dyn Error>> {
+        let response = self._request(None, query).await?;
+        let headers = self.extract_mu_headers(&response);
+        Ok(headers)
     }
 
-    pub async fn query_sudo(&self, query: Query) -> Result<SparqlResponse, Box<dyn Error>> {
-        let response = self
-            .client
-            .post(&self.endpoint)
-            .header(CONTENT_TYPE, SPARQL_RESULT_CONTENT_TYPE)
-            .header(HEADER_MU_AUTH_SUDO, "true")
-            .query(&[
-                ("query", query.to_string()),
-                ("format", SPARQL_RESULT_CONTENT_TYPE.to_string()),
-            ])
-            .send()
-            .await?;
+    pub async fn query_sudo(
+        &self,
+        query: Query,
+    ) -> Result<(Headers, SparqlResponse), Box<dyn Error>> {
+        let response = self._request(None, query).await?;
+        let headers = self.extract_mu_headers(&response);
         let sparql_result: SparqlResponse = response.json().await?;
-        Ok(sparql_result)
+        Ok((headers, sparql_result))
     }
 }
 

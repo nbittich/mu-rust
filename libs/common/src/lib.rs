@@ -12,6 +12,9 @@ pub const HEADER_MU_AUTH_SUDO: &str = "mu-auth-sudo";
 pub const HEADER_MU_CALL_ID: &str = "mu-auth-sudo";
 pub const HEADER_MU_SESSION_ID: &str = "mu-call-id";
 pub const SPARQL_ENDPOINT: &str = "SPARQL_ENDPOINT";
+// response
+pub const HEADER_MU_AUTH_ALLOWED_GROUPS: &str = "mu-auth-allowed-groups";
+pub const HEADER_MU_AUTH_USED_GROUPS: &str = "mu-auth-used-groups";
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct SessionQueryHeaders {
