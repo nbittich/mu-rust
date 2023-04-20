@@ -32,7 +32,7 @@ pub use reqwest::header::HeaderName;
 pub use reqwest::header::HeaderValue;
 
 pub const REQUEST_TIMEOUT_SECONDS: &str = "REQUEST_TIMEOUT_SECONDS";
-pub type Headers = HashMap<HeaderName, HeaderValue>;
+pub type MuResponseHeaders = HashMap<HeaderName, HeaderValue>;
 
 pub struct SparqlClient {
     reg: Regex,
@@ -155,7 +155,7 @@ impl SparqlClient {
         let response = response.error_for_status()?;
         Ok(response)
     }
-    fn extract_mu_headers(&self, response: &Response) -> Headers {
+    fn extract_mu_headers(&self, response: &Response) -> MuResponseHeaders {
         response
             .headers()
             .iter()
@@ -170,7 +170,7 @@ impl SparqlClient {
         &self,
         query: UpdateQuery,
         headers: SessionQueryHeaders,
-    ) -> Result<Headers, Box<dyn Error>> {
+    ) -> Result<MuResponseHeaders, Box<dyn Error>> {
         let response = self._request(Some(headers), query).await?;
         let response = response.error_for_status()?;
 
@@ -180,14 +180,17 @@ impl SparqlClient {
         &self,
         query: Query,
         headers: SessionQueryHeaders,
-    ) -> Result<(Headers, SparqlResponse), Box<dyn Error>> {
+    ) -> Result<(MuResponseHeaders, SparqlResponse), Box<dyn Error>> {
         let response = self._request(Some(headers), query).await?;
         let headers = self.extract_mu_headers(&response);
         let sparql_result: SparqlResponse = response.json().await?;
         Ok((headers, sparql_result))
     }
 
-    pub async fn update_sudo(&self, query: UpdateQuery) -> Result<Headers, Box<dyn Error>> {
+    pub async fn update_sudo(
+        &self,
+        query: UpdateQuery,
+    ) -> Result<MuResponseHeaders, Box<dyn Error>> {
         let response = self._request(None, query).await?;
         let headers = self.extract_mu_headers(&response);
         Ok(headers)
@@ -196,7 +199,7 @@ impl SparqlClient {
     pub async fn query_sudo(
         &self,
         query: Query,
-    ) -> Result<(Headers, SparqlResponse), Box<dyn Error>> {
+    ) -> Result<(MuResponseHeaders, SparqlResponse), Box<dyn Error>> {
         let response = self._request(None, query).await?;
         let headers = self.extract_mu_headers(&response);
         let sparql_result: SparqlResponse = response.json().await?;
