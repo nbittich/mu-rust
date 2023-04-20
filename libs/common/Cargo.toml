@@ -13,3 +13,4 @@ tracing-subscriber = { workspace = true, features = [
 tracing = { workspace = true }
 time = { workspace = true, features = ["formatting", "local-offset", "macros"] }
 chrono = { workspace = true }
+serde = { workspace = true, features = ["derive"] }

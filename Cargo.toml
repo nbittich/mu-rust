@@ -61,6 +61,7 @@ minijinja = "0.31.1"
 tinytemplate = "1.2.1"
 new_string_template = "1.4"
 
+
 [workspace.package]
 version = "0.1.0"
 authors = ["Nordine Bittich"]

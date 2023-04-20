@@ -4,6 +4,12 @@ use std::env;
 use std::error::Error;
 use std::time::Duration;
 
+use mu_rust_common::SessionQueryHeaders;
+use mu_rust_common::HEADER_MU_AUTH_SUDO;
+use mu_rust_common::HEADER_MU_CALL_ID;
+use mu_rust_common::HEADER_MU_SESSION_ID;
+use mu_rust_common::SPARQL_ENDPOINT;
+use mu_rust_common::SPARQL_RESULT_CONTENT_TYPE;
 use new_string_template::template::Template;
 
 use regex::Regex;
@@ -14,14 +20,9 @@ use serde::Serialize;
 pub use spargebra::Query;
 pub use spargebra::Update as UpdateQuery;
 
-pub const HEADER_MU_AUTH_SUDO: &str = "mu-auth-sudo";
-pub const HEADER_MU_CALL_ID: &str = "mu-auth-sudo";
-pub const HEADER_MU_SESSION_ID: &str = "mu-call-id";
-pub const SPARQL_ENDPOINT: &str = "SPARQL_ENDPOINT";
 pub const REQUEST_TIMEOUT_SECONDS: &str = "REQUEST_TIMEOUT_SECONDS";
 
 const CUSTOM_REGEX: &str = r"(?mi)\$\{([^\}]+)\}";
-const SPARQL_RESULT_CONTENT_TYPE: &str = "application/sparql-results+json";
 
 pub struct SparqlClient {
     reg: Regex,
@@ -33,12 +34,6 @@ pub struct SparqlClient {
 pub struct Config {
     pub endpoint: Option<String>,
     pub timeout: Option<Duration>,
-}
-
-#[derive(Debug, Default, Clone)]
-pub struct SessionQueryHeaders {
-    call_id: Option<String>,
-    session_id: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -95,7 +90,7 @@ impl SparqlClient {
             endpoint,
         })
     }
-    pub fn get_update_query(
+    pub fn make_update_query_from_template(
         &self,
         templ: &str,
         context: &HashMap<&str, String>,
@@ -107,7 +102,7 @@ impl SparqlClient {
         Ok(update_query)
     }
 
-    pub fn get_query(
+    pub fn make_query_from_template(
         &self,
         templ: &str,
         context: &HashMap<&str, String>,
@@ -216,7 +211,7 @@ mod test {
     fn test_select_query() {
         let client = SparqlClient::new(Default::default()).unwrap();
         let query = client
-            .get_query(
+            .make_query_from_template(
                 include_str!("test_templ/select_query.sparql"),
                 &HashMap::from([("bestuurUri", "http://xxx.com/bestuur/x".into())]),
             )
@@ -247,7 +242,7 @@ mod test {
         );
 
         let update_query = client
-            .get_update_query(
+            .make_update_query_from_template(
                 include_str!("test_templ/update_query.sparql"),
                 &HashMap::from([
                     ("someGraph", "http://mygraph.com/public".into()),

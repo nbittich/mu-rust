@@ -5,16 +5,10 @@ edition = { workspace = true }
 license = { workspace = true }
 
 [dependencies]
-axum = { workspace = true }
-tracing-subscriber = { workspace = true, features = [
-  "env-filter",
-  "time",
-  "local-time",
-] }
 tracing = { workspace = true }
+axum = { workspace = true }
 serde_json = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
-base64 = { workspace = true }
 uuid = { workspace = true, features = ["v4"] }
-time = { workspace = true, features = ["formatting", "local-offset", "macros"] }
-chrono = { workspace = true }
+async-trait = { workspace = true }
+mu_rust_common = { path = "../common" }

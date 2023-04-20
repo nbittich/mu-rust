@@ -786,6 +786,7 @@ name = "mu_rust_common"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "serde",
  "time 0.3.20",
  "tracing",
  "tracing-subscriber",
@@ -842,14 +843,12 @@ dependencies = [
 name = "mu_rust_service_common"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "axum",
- "base64 0.21.0",
- "chrono",
+ "mu_rust_common",
  "serde",
  "serde_json",
- "time 0.3.20",
  "tracing",
- "tracing-subscriber",
  "uuid",
 ]
 
@@ -857,6 +856,7 @@ dependencies = [
 name = "mu_rust_sparql_client"
 version = "0.1.0"
 dependencies = [
+ "mu_rust_common",
  "new_string_template",
  "regex",
  "reqwest",
