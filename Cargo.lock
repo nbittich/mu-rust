@@ -854,7 +854,7 @@ dependencies = [
 
 [[package]]
 name = "mu_rust_sparql_client"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "mu_rust_common",
  "new_string_template",
