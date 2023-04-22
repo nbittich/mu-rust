@@ -65,7 +65,7 @@ mu_rust_common = { path = "./libs/common", version = "0.1.0" }
 mu_rust_message_common = { path = "./libs/message_common", version = "0.1.0" }
 mu_rust_message_client = { path = "./libs/message_client", version = "0.1.0" }
 mu_rust_service_common = { path = "./libs/service_common", version = "0.1.0" }
-mu_rust_sparql_client = { path = "./libs/sparql_client", version = "0.1.0" }
+mu_rust_sparql_client = { path = "./libs/sparql_client", version = "0.1.1" }
 mu_rust_message_broker = { path = "./services/message_broker", version = "0.1.0" }
 
 [workspace.package]
