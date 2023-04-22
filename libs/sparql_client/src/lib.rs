@@ -80,7 +80,7 @@ impl SparqlClient {
         let endpoint = if let Some(endpoint) = config.endpoint {
             endpoint
         } else {
-            env::var(SPARQL_ENDPOINT).unwrap_or("http://database:8090/sparql".into())
+            env::var(SPARQL_ENDPOINT).unwrap_or("http://database:8890/sparql".into())
         };
         let timeout = if let Some(timeout) = config.timeout {
             timeout
@@ -130,6 +130,7 @@ impl SparqlClient {
         query: impl Display,
     ) -> Result<Response, Box<dyn Error>> {
         let query = query.to_string();
+        tracing::debug!("request headers: {headers:?}");
         tracing::debug!("query: {query}");
 
         let mut request_builder = self
@@ -156,14 +157,17 @@ impl SparqlClient {
         Ok(response)
     }
     fn extract_mu_headers(&self, response: &Response) -> MuResponseHeaders {
-        response
+        let response_headers = response
             .headers()
             .iter()
             .filter(|(n, _)| {
                 [HEADER_MU_AUTH_USED_GROUPS, HEADER_MU_AUTH_ALLOWED_GROUPS].contains(&n.as_str())
             })
             .map(|(n, v)| (n.clone(), v.clone()))
-            .collect()
+            .collect();
+
+        tracing::debug!("response headers {response_headers:?}");
+        response_headers
     }
 
     pub async fn update(
