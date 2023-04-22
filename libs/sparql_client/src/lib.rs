@@ -128,6 +128,7 @@ impl SparqlClient {
         &self,
         headers: Option<SessionQueryHeaders>,
         query: impl Display,
+        sudo: bool,
     ) -> Result<Response, Box<dyn Error>> {
         let query = query.to_string();
         tracing::debug!("request headers: {headers:?}");
@@ -148,7 +149,8 @@ impl SparqlClient {
                     headers.session_id.unwrap_or("".into()),
                 )
                 .header(HEADER_MU_CALL_ID, headers.call_id.unwrap_or("".into()));
-        } else {
+        }
+        if sudo {
             request_builder = request_builder.header(HEADER_MU_AUTH_SUDO, "true");
         }
 
@@ -175,7 +177,7 @@ impl SparqlClient {
         query: UpdateQuery,
         headers: SessionQueryHeaders,
     ) -> Result<MuResponseHeaders, Box<dyn Error>> {
-        let response = self._request(Some(headers), query).await?;
+        let response = self._request(Some(headers), query, false).await?;
         let response = response.error_for_status()?;
 
         Ok(self.extract_mu_headers(&response))
@@ -185,7 +187,7 @@ impl SparqlClient {
         query: Query,
         headers: SessionQueryHeaders,
     ) -> Result<(MuResponseHeaders, SparqlResponse), Box<dyn Error>> {
-        let response = self._request(Some(headers), query).await?;
+        let response = self._request(Some(headers), query, false).await?;
         let headers = self.extract_mu_headers(&response);
         let sparql_result: SparqlResponse = response.json().await?;
         Ok((headers, sparql_result))
@@ -194,8 +196,9 @@ impl SparqlClient {
     pub async fn update_sudo(
         &self,
         query: UpdateQuery,
+        headers: Option<SessionQueryHeaders>,
     ) -> Result<MuResponseHeaders, Box<dyn Error>> {
-        let response = self._request(None, query).await?;
+        let response = self._request(headers, query, true).await?;
         let headers = self.extract_mu_headers(&response);
         Ok(headers)
     }
@@ -203,8 +206,9 @@ impl SparqlClient {
     pub async fn query_sudo(
         &self,
         query: Query,
+        headers: Option<SessionQueryHeaders>,
     ) -> Result<(MuResponseHeaders, SparqlResponse), Box<dyn Error>> {
-        let response = self._request(None, query).await?;
+        let response = self._request(headers, query, true).await?;
         let headers = self.extract_mu_headers(&response);
         let sparql_result: SparqlResponse = response.json().await?;
         Ok((headers, sparql_result))
